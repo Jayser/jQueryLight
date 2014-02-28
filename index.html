@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+<script>
+;(function(){
+
+	"use strict";
+
+	var d = document,
+		w = window,
+
+		DOMethod = {
+			init: function(str, trim) {
+				var str = trim(str),
+					id  = /^#/.test(str),
+					tag = /^[a-z]+/.test(str),
+					cEl = /^\<[a-z]+\>/.test(str);
+
+				return id  ? DOMethod.getId(str): 
+					   tag ? DOMethod.getTag(str, index):
+					   cEl ? DOMethod.createEl(str):
+							 DOMethod.getSelector(str);
+			},
+			getId: function(id) {
+				return d.getElementById(id.replace(/^#/,''));
+			},
+			getSelector: function(css) {
+				return d.querySelectorAll(css);
+			},
+			getTag: function(tag, index) {
+				var el  = d.getElementsByTagName(tag);
+				return index ? el[index] : el;
+			},
+			createEl: function(name) {
+				return d.createElement(name.replace(/^\<|\>$/,''));
+			}
+		},
+
+	jS = function(el) {
+		this.el = el;
+	};
+
+	jS.prototype.attr = function(obj) {
+		for(var attr in obj){
+			this.el.setAttribute(attr, obj[attr]);
+		}
+		return this;
+	};
+
+	jS.prototype.addStyle = function(obj) {
+		for(var key in obj){
+			this.el.style[key] = obj[key];;
+		}
+		return this;
+	};
+
+	jS.prototype.append = function(el) {
+		this.el.appendChild(el);
+		return this;
+	};
+
+	jS.prototype.each = function(fn, self) {
+		for (var i = 0, ln = this.el.length; i < ln; i++){
+			fn.call(self, this.el[i], i);
+		}
+	};
+
+	jS.prototype.trim = function(str) {
+		return str.replace(/^\s+|\s+$/gm,'');
+	};
+
+	window.$ = function(str){
+
+		function jsDOM(){};
+		jsDOM.prototype = jS.prototype;
+		jsDOM.prototype.constructor = jsDOM;
+
+		var arg = arguments[0];
+
+		if (typeof arg === 'function'){
+			setTimeout(function go(){
+				 d.readyState === "complete" ? arg() : setTimeout(go, 10);
+			},10);
+		} else {
+			var core      	  = new jsDOM;
+				core.el       = str.nodeType === 1 ? str : DOMethod.init(str, core.trim);
+
+			return core;
+		}
+	};
+
+}());
+
+$(function() {
+	$('.b2').each(function(el, index){
+		$(el).addStyle({
+			color:'red'
+		});
+	});
+});
+
+</script>
+
+	<div id="b1">block1</div>
+	<div id="b2">block2</div>
+
+	<div class="b2">block3</div>
+	<div class="b2">block4</div>
+
+</body>
+</html>
